@@ -3,6 +3,7 @@ import sys
 import getpass
 import re
 from datetime import datetime
+from utils.stringdist import dist
 
 def filename_to_date(filename: str) -> datetime: 
     """Convert filename like "hasanabi-2023-10-14.log" to "10-14-2023".
@@ -104,16 +105,29 @@ channel_list.remove(".DS_Store")
 print(f"[ ] Channels:")
 for channel in channel_list:
     print(f"[ ]     {channel}")
+print("\n[ ] Q - Quit")
 
 # >>> Get user input for channel <<<
 
-channel = input("[+] Enter channel name: ")
-if channel in channel_list:
-    print(f"[ ] Now looking in the logs for {channel}'s channel...")
-else:
-    print(f"[-] ERROR: Could not find log files for {channel}.")
-    print(f"[-] Exiting...")
-    sys.exit(1)
+while True:
+    channel = input("[+] Enter channel name: ")
+    if channel in channel_list:
+        break
+    else:
+        print(f"[-] ERROR: Could not find log files for {channel}.")
+        channel_guess_dists = {channel_list[i]:dist(channel, channel_list[i]) for i in range(len(channel_list))}
+        channel_guess = min(channel_guess_dists, key=channel_guess_dists.get)
+        print(f"[ ] Did you mean: {channel_guess}?")
+        response = input("[+] Y/n: ")
+
+        if response == "Y" or response == "y" or response == "":
+            channel = channel_guess
+            print(f"[ ] Using {channel}.")
+            break
+
+        else:
+            print("[-] ERROR: Could not find channel. Try again.")
+            continue
 
 
 # >>> Get list of log files for channel <<<
@@ -134,14 +148,14 @@ else:
 
 while True:
     print("[ ] How do you want to search these files? Please select which mode you want:")
-    print("[ ]     A - Search all files")
+    print("[ ]     A - Search all files (Default)")
     print("[ ]     R - Search a specific date range")
     print("[ ]     S - Search a specific date")
     print("[ ]     Q - Quit")
 
     mode = input("[+] Enter mode: ")
     mode = mode.upper()
-    if mode == "A":
+    if mode == "A" or mode == "":
         print("[ ] Searching all files.")
         break
     elif mode == "R":
